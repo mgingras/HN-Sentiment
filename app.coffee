@@ -8,6 +8,8 @@ routes = require './routes'
 user = require './routes/user'
 http = require 'http'
 path = require 'path'
+sentiment = require 'sentiment'
+twit = require 'twit'
 
 # Express
 app = express()
@@ -25,13 +27,23 @@ app.use express.static path.join __dirname, 'public'
 
 # development only
 if app.get('env') is 'development'
-app.use express.logger 'dev'
+  app.use express.logger 'dev'
   app.use express.errorHandler()
-  app.locals.pretty = true 
+  app.locals.pretty = true
 
 
-app.get '/', routes.index
-app.get '/users', user.list
 
-http.createServer(app).listen app.get('port'), ->
-  console.log 'Express server listening on port ' + app.get('port')
+# Twitter Stuff
+T = new Twit(
+  consumer_key: process.env.consumer_key,
+  consumer_secret: process.env.consumer_secret,
+  access_token: process.env.oauth_token,
+  access_token_secret: process.env.oauth_token_secret
+)
+
+
+# Routes
+  app.get '/', routes.index
+
+  http.createServer(app).listen app.get('port'), ->
+    console.log 'Express server listening on port ' + app.get('port')
