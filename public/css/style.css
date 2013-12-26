@@ -1,0 +1,48 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+body {
+  padding-top: 40px;
+  padding-bottom: 40px;
+  background-color: #eee;
+}
+
+.form-sentiment {
+  max-width: 330px;
+  padding: 15px;
+  margin: 0 auto;
+}
+.form-sentiment .form-sentiment-heading,
+.form-sentiment .checkbox {
+  margin-bottom: 10px;
+}
+.form-sentiment .checkbox {
+  font-weight: normal;
+}
+.form-sentiment .form-control {
+  position: relative;
+  font-size: 16px;
+  height: auto;
+  padding: 10px;
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+}
+.form-sentiment .form-control:focus {
+  z-index: 2;
+}
+.form-sentiment input[type="text"] {
+  margin-bottom: -1px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.form-sentiment input[type="password"] {
+  margin-bottom: 10px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}

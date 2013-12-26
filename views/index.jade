@@ -1,0 +1,9 @@
+extends layout
+
+block content
+  div.container
+   form.form-sentiment(role="form")
+    h1= title
+    p Enter word to be analyzed
+    input.form-control(type="text", placeholder="Word to be analyzed", required, autofocus)
+    button.btn.btn-lg.btn-primary.btn-block(type="submit") Anaylze
