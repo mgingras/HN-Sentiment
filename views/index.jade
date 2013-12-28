@@ -2,8 +2,8 @@ extends layout
 
 block content
   div.container
-   form.form-sentiment(role="form")
+   form#myForm.form-sentiment(role="form")
     h1= title
-    p Enter word that's sentiment by the HN community will be analyzed
-    input.form-control(type="text", placeholder="Word to be analyzed", required, autofocus)
-    button.btn.btn-lg.btn-primary.btn-block(type="submit") Anaylze
+    p Enter a word to have the HN community's sentiment towards it analyzed
+    input#inText.form-control(type="text", placeholder="Word to be analyzed", required, autofocus)
+    button#submit.btn.btn-lg.btn-primary.btn-block(type="submit") Anaylze

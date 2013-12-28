@@ -10,6 +10,24 @@ util = require 'util'
 sentiment = require 'sentiment'
 hn = require 'hacker-news-parser'
 https = require 'https'
+request = require 'request'
+WebSocketServer = require('ws').Server
+grunt = require 'grunt'
+compressor = require 'node-minify'
+
+
+# Grunt task
+grunt.loadNpmTasks 'grunt-contrib-coffee'
+grunt.tasks [], {}, ->
+  grunt.log.ok "Grunt: Done running tasks!"
+
+new compressor.minify {
+  type: 'uglifyjs',
+  fileIn: 'assets/js/client.js',
+  fileOut: 'public/js/client.min.js',
+  callback: (err) ->  if err
+    console.log 'minify: ' + err
+  }
 
 # Express
 app = express()
@@ -31,14 +49,18 @@ if app.get('env') is 'development'
   app.use express.errorHandler()
   app.locals.pretty = true
 
+server = http.createServer(app).listen app.get('port'), ->
+  console.log 'Express server listening on port ' + app.get('port')
+wss = new WebSocketServer({server:server})
+
 # Returns an array of HN post items
 getHackerNewsPosts = (query, callback) ->
   console.log "getHackerNewsPosts: " + query
   limit = 10
-  options = 
+  options =
     host: "api.thriftdb.com"
     path: "/api.hnsearch.com/items/_search?q=" + query + "&" + limit + "=100&weights[title]=2.0&weights[text]=1.5&weights[domain]=1.0&weights[username]=0.0&weights[type]=0.0&boosts[fields][points]=0.15&boosts[fields][num_comments]=0.15&boosts[functions][pow(2,div(div(ms(create_ts,NOW),3600000),72))]=200.0&pretty_print=true"
-  console.log "API request to URL: " + options.host + options.path
+  # console.log "API request to URL: " + options.host + options.path
   http.get options, (res) ->
     data = ''
     res.on 'data', (chunk) ->
@@ -50,37 +72,89 @@ getHackerNewsPosts = (query, callback) ->
 
 getHackerNewsComments = (id, callback) ->
   comments = []
-  console.log "id: " + id
   options =
     host: "news.ycombinator.com"
     path: "/item?id=" + id
-  https.get options, (res) ->
-    data = ''
-    res.on 'data', (chunk) ->
-      data += chunk
-    res.on 'end', ->
-      comments = hn.parse(data).comments
-      allComments = []
-      for comment in comments
-        recurseComment allComments, comment
+
+  console.log "Post: https://" + options.host+options.path
+  request "https://"+options.host+options.path, (err, res) ->
+  # request "https://news.ycombinator.com/item?id=4992617", (err, res) ->
+    console.log "request ERR: "+ util.inspect err if err
+    
+    allComments = []
+    try
+      comments = hn.parse(res.body).comments
+    catch error
+      console.log error
       callback allComments
+      return
+
+    for comment in comments
+      recurseComment allComments, comment
+    callback allComments
 
 recurseComment = (comments, comment) ->
-  console.log "length: " + comments.length
   comments.push comment.body
   if comment.comments.length > 0
     for c in comment.comments
       recurseComment comments, c
 
 
+parseResult = (result, callback) ->
+  allText = []
+  allText.push result.item.title
+  if result.item.text
+    allText.push result.item.text
+  # console.log "allText: " + allText
+  getHackerNewsComments result.item.id, (allComments) ->
+    callback allComments.concat allText
 
-getHackerNewsPosts "bitcoin", (results) ->
-  getHackerNewsComments results[0].item.id
-  # for result in results
-  #   console.log "item[" +_i+"]: " + util.inspect result.item
+sentimentalize = (textArray, callback) ->
+  opinionIndex = 0
+  i = 0
+  positiveWords = []
+  negativeWords = []
+  for text in textArray
+    if !text
+      i++
+    else
+      sentiment text, (err, res) ->
+        console.log err if err
+        opinionIndex += res.score
+        positiveWords = positiveWords.concat res.positive
+        negativeWords = negativeWords.concat res.negative
+        if ++i is textArray.length
+          callback opinionIndex, positiveWords, negativeWords
 
+
+wss.on 'connection', (ws) ->
+  console.log "clientConnection"
+  ws.on 'message' , (msg) ->
+    console.log "wss received: " + msg
+    msg = JSON.parse msg
+    # ws.send(10);
+
+# getHackerNewsPosts "NSA", (results) ->
+#   # results.splice 5 # temp limit
+#   article = []
+#   cent = []
+#   i=0
+#   for result in results
+#     # cent = cent.concat 
+#     parseResult result, (text) ->
+#       cent = cent.concat text
+#       # console.log "i:"+i+" results.length:"+results.length
+#       if ++i is results.length
+#         console.log "cent length: " + cent.length
+#         sentimentalize cent, (opinionIndex, posWords, negWords) ->
+#           console.log "Opinion: " + opinionIndex
+          # console.log "Positive Words: " + posWords
+          # console.log "Negative Words: " + negWords
+
+  
+
+# Split sentences
+# var sentences = str.replace(/\.\s+/g,'.|').replace(/\?\s/g,'?|').replace(/\!\s/g,'!|').split("|");
 # Routes
 app.get '/', routes.index
 
-http.createServer(app).listen app.get('port'), ->
-  console.log 'Express server listening on port ' + app.get('port')

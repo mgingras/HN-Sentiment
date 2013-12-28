@@ -8,9 +8,15 @@
   "dependencies": {
     "express": "3.4.7",
     "coffee-script": "1.6.3",
-     "jade": "1.0.0",
-     "sentiment": "0.2.1",
-     "ws": "0.4.31",
-     "hnsearch": "0.1.0"
+    "jade": "1.0.0",
+    "sentiment": "0.2.1",
+    "ws": "0.4.31",
+    "hnsearch": "0.1.0",
+    "hacker-news-parser": "0.0.2 ",
+    "request": "2.30.0",
+    "grunt": "0.4.2",
+    "node-minify": "0.8.2 ",
+    "grunt-contrib-coffee": "0.8.0"
+
   }
 }
