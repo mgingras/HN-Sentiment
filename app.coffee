@@ -140,9 +140,10 @@ wss.on 'connection', (ws) ->
       # ws.send opinion ##TODO
 
 handleMSG = (query, callback) ->
-  if cache.query
-    console.dir cache
-    callback cache.query
+  if cache[query]
+    # console.dir cache
+    callback cache[query]
+    return
   getHackerNewsPosts query, (results) ->
   # results.splice 5 # temp limit
     article = []
@@ -158,7 +159,7 @@ handleMSG = (query, callback) ->
             console.log "Opinion: " + opinionIndex
             msg =
               opinion: opinionIndex
-            cache.query = msg
+            cache[query] = msg
             callback msg
           # console.log "Positive Words: " + posWords
           # console.log "Negative Words: " + negWords
