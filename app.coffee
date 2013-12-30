@@ -140,6 +140,7 @@ wss.on 'connection', (ws) ->
       # ws.send opinion ##TODO
 
 handleMSG = (query, callback) ->
+  query = query.toLowerCase()
   if cache[query]
     # console.dir cache
     callback cache[query]
