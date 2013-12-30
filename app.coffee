@@ -60,16 +60,15 @@ cache = {}
 getHackerNewsPosts = (query, callback) ->
   console.log "getHackerNewsPosts: " + query
   limit = 10
+  q = encodeURIComponent query
   options =
     host: "api.thriftdb.com"
-    path: "/api.hnsearch.com/items/_search?q=" + query + "&" + limit + "=100&weights[title]=2.0&weights[text]=1.5&weights[domain]=1.0&weights[username]=0.0&weights[type]=0.0&boosts[fields][points]=0.15&boosts[fields][num_comments]=0.15&boosts[functions][pow(2,div(div(ms(create_ts,NOW),3600000),72))]=200.0&pretty_print=true"
-  # console.log "API request to URL: " + options.host + options.path
-  http.get options, (res) ->
-    data = ''
-    res.on 'data', (chunk) ->
-      data += chunk
-    res.on 'end', ->
-      callback JSON.parse(data).results
+    path: "/api.hnsearch.com/items/_search?q=" + q + "&" + limit + "=100&weights[title]=2.0&weights[text]=1.5&weights[domain]=1.0&weights[username]=0.0&weights[type]=0.0&boosts[fields][points]=0.15&boosts[fields][num_comments]=0.15&boosts[functions][pow(2,div(div(ms(create_ts,NOW),3600000),72))]=200.0&pretty_print=true"
+  console.log "API request to URL: " + options.host + options.path
+
+  request "http://"+options.host+options.path, (err, res) ->
+    console.log "request ERR: "+ util.inspect err if err
+    callback JSON.parse(res.body).results
   .on 'error', (e) ->
     console.log "Got error: " + e.message
 
@@ -79,11 +78,10 @@ getHackerNewsComments = (id, callback) ->
     host: "news.ycombinator.com"
     path: "/item?id=" + id
 
-  # console.log "Post: https://" + options.host+options.path
-  request "https://"+options.host+options.path, (err, res) ->
-  # request "https://news.ycombinator.com/item?id=4992617", (err, res) ->
-    console.log "request ERR: "+ util.inspect err if err
+  console.log "Post: https://" + options.host+options.path
 
+  request "https://"+options.host+options.path, (err, res) ->
+    console.log "request ERR: "+ util.inspect err if err
     allComments = []
     try
       comments = hn.parse(res.body).comments
