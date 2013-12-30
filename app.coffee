@@ -51,7 +51,10 @@ if app.get('env') is 'development'
 
 server = http.createServer(app).listen app.get('port'), ->
   console.log 'Express server listening on port ' + app.get('port')
+
 wss = new WebSocketServer({server:server})
+
+cache = {}
 
 # Returns an array of HN post items
 getHackerNewsPosts = (query, callback) ->
@@ -76,11 +79,11 @@ getHackerNewsComments = (id, callback) ->
     host: "news.ycombinator.com"
     path: "/item?id=" + id
 
-  console.log "Post: https://" + options.host+options.path
+  # console.log "Post: https://" + options.host+options.path
   request "https://"+options.host+options.path, (err, res) ->
   # request "https://news.ycombinator.com/item?id=4992617", (err, res) ->
     console.log "request ERR: "+ util.inspect err if err
-    
+
     allComments = []
     try
       comments = hn.parse(res.body).comments
@@ -130,28 +133,37 @@ sentimentalize = (textArray, callback) ->
 wss.on 'connection', (ws) ->
   console.log "clientConnection"
   ws.on 'message' , (msg) ->
-    console.log "wss received: " + msg
+    # console.log "wss received: " + msg
     msg = JSON.parse msg
-    # ws.send(10);
+    handleMSG msg.text, (msg) ->
+      ws.send JSON.stringify msg
+      # ws.send opinion ##TODO
 
-# getHackerNewsPosts "NSA", (results) ->
-#   # results.splice 5 # temp limit
-#   article = []
-#   cent = []
-#   i=0
-#   for result in results
-#     # cent = cent.concat 
-#     parseResult result, (text) ->
-#       cent = cent.concat text
-#       # console.log "i:"+i+" results.length:"+results.length
-#       if ++i is results.length
-#         console.log "cent length: " + cent.length
-#         sentimentalize cent, (opinionIndex, posWords, negWords) ->
-#           console.log "Opinion: " + opinionIndex
+handleMSG = (query, callback) ->
+  if cache.query
+    console.dir cache
+    callback cache.query
+  getHackerNewsPosts query, (results) ->
+  # results.splice 5 # temp limit
+    article = []
+    sent = []
+    i=0
+    for result in results
+      parseResult result, (text) ->
+        sent = sent.concat text
+        # console.log "i:"+i+" results.length:"+results.length
+        if ++i is results.length
+          # console.log "sent length: " + sent.length
+          sentimentalize sent, (opinionIndex, posWords, negWords) ->
+            console.log "Opinion: " + opinionIndex
+            msg =
+              opinion: opinionIndex
+            cache.query = msg
+            callback msg
           # console.log "Positive Words: " + posWords
           # console.log "Negative Words: " + negWords
 
-  
+
 
 # Split sentences
 # var sentences = str.replace(/\.\s+/g,'.|').replace(/\?\s/g,'?|').replace(/\!\s/g,'!|').split("|");

@@ -1,31 +1,33 @@
 ws = undefined
-escapable = /[\x00-\x1f\ud800-\udfff\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufff0-\uffff]/g
-
-filterUnicode = (quoted) ->
-  escapable.lastIndex = 0
-  return quoted  unless escapable.test(quoted)
-  quoted.replace escapable, (a) ->
-    ""
 
 $(document).ready ->
   host = location.origin.replace /^http/, 'ws'
-  ws =  new WebSocket host
+  ws = new WebSocket host
   $("#myForm").submit (e) ->
-   e.preventDefault()
+    e.preventDefault()
+  ws.onmessage = (msg) ->
+    console.log msg
+    msg = JSON.parse msg.data
+    handleSentiment msg
 
   $('#submit').on "click", ->
-    text= $("#inText").val()
-    # console.log text
-    # text = filterUnicode text
-    # console.log text
-
-    text = text.replace(/\s/g, '');
-    text = decodeURIComponent text
-    msg = 
+    text = $("#inText").val()
+    msg =
       type: "message"
       text: text
-    msg = JSON.stringify msg
-    # console.log msg
-    # filterUnicode msg
-    # console.log msg
+    msg= JSON.stringify msg
     ws.send msg
+
+handleSentiment = (sentiment) ->
+  console.log  sentiment.opinion
+  $('#sentiment').text "Sentiment: " + sentiment.opinion
+
+  $('#symbols').text ""
+  n = (Math.abs(sentiment.opinion) - (Math.abs(sentiment.opinion) % 100))/100
+  n++
+  for i in [0...n] by 1
+    if (sentiment.opinion > 0)
+      $('#symbols').append '<i class="fa fa-plus">&nbsp;</i>'
+    else
+      $('#symbols').append '<i class="fa fa-minus">&nbsp;</i>'
+
