@@ -6,11 +6,18 @@ $(document).ready ->
   $("#myForm").submit (e) ->
     e.preventDefault()
   ws.onmessage = (msg) ->
-    console.log msg
+    $(".spinner").removeClass "show"
+    $(".spinner").addClass "hide"
+    # console.log msg
     msg = JSON.parse msg.data
     handleSentiment msg
 
   $('#submit').on "click", ->
+    style = "display:inline;"
+    $(".spinner").removeClass "hide"
+    $(".spinner").addClass "show"
+    $('#sentiment').text ""
+    $('#symbols').text ""
     text = $("#inText").val()
     msg =
       type: "message"

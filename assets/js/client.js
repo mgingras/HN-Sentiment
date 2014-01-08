@@ -11,12 +11,18 @@
       return e.preventDefault();
     });
     ws.onmessage = function(msg) {
-      console.log(msg);
+      $(".spinner").removeClass("show");
+      $(".spinner").addClass("hide");
       msg = JSON.parse(msg.data);
       return handleSentiment(msg);
     };
     return $('#submit').on("click", function() {
-      var msg, text;
+      var msg, style, text;
+      style = "display:inline;";
+      $(".spinner").removeClass("hide");
+      $(".spinner").addClass("show");
+      $('#sentiment').text("");
+      $('#symbols').text("");
       text = $("#inText").val();
       msg = {
         type: "message",
