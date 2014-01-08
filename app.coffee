@@ -15,6 +15,8 @@ WebSocketServer = require('ws').Server
 grunt = require 'grunt'
 compressor = require 'node-minify'
 
+require 'newrelic'
+
 
 # Grunt task
 grunt.loadNpmTasks 'grunt-contrib-coffee'
