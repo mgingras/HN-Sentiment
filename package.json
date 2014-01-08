@@ -16,7 +16,7 @@
     "request": "2.30.0",
     "grunt": "0.4.2",
     "node-minify": "0.8.2 ",
-    "grunt-contrib-coffee": "0.8.0"
-
+    "grunt-contrib-coffee": "0.8.0",
+    "newrelic": "1.2.0"
   }
 }
