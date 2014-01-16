@@ -88,10 +88,9 @@ getHackerNewsComments = (id, callback) ->
     try
       comments = hn.parse(res.body).comments
     catch error
-      console.log error
+      console.log "Parsing Comments Err: " + error
       callback allComments
       return
-
     for comment in comments
       recurseComment allComments, comment
     callback allComments
@@ -108,9 +107,9 @@ parseResult = (result, callback) ->
   allText.push result.item.title
   if result.item.text
     allText.push result.item.text
-  # console.log "allText: " + allText
   getHackerNewsComments result.item.id, (allComments) ->
-    callback allComments.concat allText
+    allComments = allComments.concat allText if allComments.length > 0
+    callback allComments
 
 sentimentalize = (textArray, callback) ->
   opinionIndex = 0
@@ -137,26 +136,26 @@ wss.on 'connection', (ws) ->
     msg = JSON.parse msg
     handleMSG msg.text, (msg) ->
       ws.send JSON.stringify msg
-      # ws.send opinion ##TODO
 
 handleMSG = (query, callback) ->
   query = query.toLowerCase()
   if cache[query]
-    # console.dir cache
+    # caching
     callback cache[query]
     return
   getHackerNewsPosts query, (results) ->
-  # results.splice 5 # temp limit
     article = []
     sent = []
+    count = 0
     i=0
     for result in results
       parseResult result, (text) ->
+        count++ if text.length > 0
         sent = sent.concat text
-        # console.log "i:"+i+" results.length:"+results.length
         if ++i is results.length
-          # console.log "sent length: " + sent.length
           sentimentalize sent, (opinionIndex, posWords, negWords) ->
+            # Normalize the results
+            opinionIndex = Math.ceil opinionIndex / count
             console.log "Opinion: " + opinionIndex
             msg =
               opinion: opinionIndex
