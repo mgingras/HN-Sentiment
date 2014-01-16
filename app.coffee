@@ -69,7 +69,7 @@ getHackerNewsPosts = (query, callback) ->
   console.log "API request to URL: " + options.host + options.path
 
   request "http://"+options.host+options.path, (err, res) ->
-    console.log "request ERR: "+ util.inspect err if err
+    console.log "request ERR[" + query + "]: " + util.inspect err if err
     callback JSON.parse(res.body).results
   .on 'error', (e) ->
     console.log "Got error: " + e.message
@@ -154,6 +154,9 @@ handleMSG = (query, callback) ->
         sent = sent.concat text
         if ++i is results.length
           sentimentalize sent, (opinionIndex, posWords, negWords) ->
+            if isNaN opinionIndex
+              callback {opinion:"Error analyzing user sentiment..."}
+              return
             # Normalize the results
             opinionIndex = Math.ceil opinionIndex / count
             console.log "Opinion: " + opinionIndex

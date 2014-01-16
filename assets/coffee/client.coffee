@@ -30,7 +30,7 @@ handleSentiment = (sentiment) ->
   $('#sentiment').text "Sentiment: " + sentiment.opinion
 
   $('#symbols').text ""
-  n = (Math.abs(sentiment.opinion) - (Math.abs(sentiment.opinion) % 100))/100
+  n = (Math.abs(sentiment.opinion) - (Math.abs(sentiment.opinion) % 10))/10
   n++
   for i in [0...n] by 1
     if (sentiment.opinion > 0)
