@@ -38,7 +38,7 @@
     console.log(sentiment.opinion);
     $('#sentiment').text("Sentiment: " + sentiment.opinion);
     $('#symbols').text("");
-    n = (Math.abs(sentiment.opinion) - (Math.abs(sentiment.opinion) % 100)) / 100;
+    n = (Math.abs(sentiment.opinion) - (Math.abs(sentiment.opinion) % 10)) / 10;
     n++;
     _results = [];
     for (i = _i = 0; _i < n; i = _i += 1) {
