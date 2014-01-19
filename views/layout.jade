@@ -2,10 +2,36 @@ doctype html
 html
   head
     title= title
+    meta(charset="utf-8")
+    meta(author="Martin Gingras")
+    meta(name ="description", content="Analyze the Hacker News communities sentiment towards a particular topic!")
+    meta(name="keywords", content="Hacker Newws,Sentiment,Sentiment ANalysis,Iron.io,Hackathon,Martin Gingras,Martin,Gingras")
+
+    // Apple meta tags
+    meta(name="apple-mobile-web-app-capable", content="yes" )
+    meta(name="viewport", id="vp", content="initial-scale=1.0,user-scalable=no,maximum-scale=1,width=device-width")
+    meta(name="viewport", id="vp6", content="initial-scale=1.0,user-scalable=no,maximum-scale=1",  media="(device-height: 568px)")
+    link(rel="apple-touch-icon", href="/img/HN.png")
+    link(rel="apple-touch-icon-precomposed", href="/img/HN.png")
+
+    // Open Graph
+    meta(property="og:title", content="HN-Sentiment")
+    meta(property="og:url", content="http://www.HN-Sentiment.com")
+    meta(property="og:image", content="http://www.HN-Sentiment.com/img/HN.png")
+    meta(property="og:description", content="Analyze the Hacker News communities sentiment towards a particular topic!")
+
+    // Icons
+    link(rel="icon", type="image/ico", href="/img/favicon.ico")
+    link(rel='shortcut icon', href='/img/favicon.ico')
+    link(rel='image_src' href="/img/HN.png")
+
+    // Styles
     link(rel='stylesheet', href='/css/style.css')
     link(rel='stylesheet', href='/css/bootstrap.min.css')
     link(rel='stylesheet', href='/css/bootstrap-theme.min.css')
     link(rel='stylesheet', href='/css/font-awesome.min.css')
+
+    // JavaScripts
     script(src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js")
     script(src="/js/client.min.js")
     script(src="//ajax.aspnetcdn.com/ajax/bootstrap/3.0.0/bootstrap.min.js")
