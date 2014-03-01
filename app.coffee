@@ -169,8 +169,6 @@ handleMSG = (query, callback) ->
 
 
 
-# Split sentences
-# var sentences = str.replace(/\.\s+/g,'.|').replace(/\?\s/g,'?|').replace(/\!\s/g,'!|').split("|");
 # Routes
 app.get '/', routes.index
 
