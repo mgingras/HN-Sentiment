@@ -171,4 +171,3 @@ handleMSG = (query, callback) ->
 
 # Routes
 app.get '/', routes.index
-
