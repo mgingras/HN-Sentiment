@@ -14,6 +14,7 @@ request = require 'request'
 WebSocketServer = require('ws').Server
 grunt = require 'grunt'
 compressor = require 'node-minify'
+async = require 'async'
 
 require 'newrelic'
 
@@ -61,16 +62,12 @@ cache = {}
 # Returns an array of HN post items
 getHackerNewsPosts = (query, callback) ->
   console.log "getHackerNewsPosts: " + query
-  limit = 10
-  q = encodeURIComponent query
-  options =
-    host: "api.thriftdb.com"
-    path: "/api.hnsearch.com/items/_search?q=" + q + "&" + limit + "=100&weights[title]=2.0&weights[text]=1.5&weights[domain]=1.0&weights[username]=0.0&weights[type]=0.0&boosts[fields][points]=0.15&boosts[fields][num_comments]=0.15&boosts[functions][pow(2,div(div(ms(create_ts,NOW),3600000),72))]=200.0&pretty_print=true"
-  console.log "API request to URL: " + options.host + options.path
+  query = 'http://hn.algolia.com/api/v1/search?query=' + query + '&tags=story'
+  console.log "API request to URL: " + query
 
-  request "http://"+options.host+options.path, (err, res) ->
-    console.log "request ERR[" + query + "]: " + util.inspect err if err
-    callback JSON.parse(res.body).results
+  request.get query, (err, res, body) ->
+    util.inspect err if err
+    callback JSON.parse(res.body).hits
   .on 'error', (e) ->
     console.log "Got error: " + e.message
 
@@ -82,11 +79,11 @@ getHackerNewsComments = (id, callback) ->
 
   console.log "Post: https://" + options.host+options.path
 
-  request "https://"+options.host+options.path, (err, res) ->
+  request "https://"+options.host+options.path, (err, res, body) ->
     console.log "request ERR: "+ util.inspect err if err
     allComments = []
     try
-      comments = hn.parse(res.body).comments
+      comments = hn.parse(body).comments
     catch error
       console.log "Parsing Comments Err: " + error
       callback allComments
@@ -104,29 +101,12 @@ recurseComment = (comments, comment) ->
 
 parseResult = (result, callback) ->
   allText = []
-  allText.push result.item.title
-  if result.item.text
-    allText.push result.item.text
-  getHackerNewsComments result.item.id, (allComments) ->
-    allComments = allComments.concat allText if allComments.length > 0
-    callback allComments
-
-sentimentalize = (textArray, callback) ->
-  opinionIndex = 0
-  i = 0
-  positiveWords = []
-  negativeWords = []
-  for text in textArray
-    if !text
-      i++
-    else
-      sentiment text, (err, res) ->
-        console.log err if err
-        opinionIndex += res.score
-        positiveWords = positiveWords.concat res.positive
-        negativeWords = negativeWords.concat res.negative
-        if ++i is textArray.length
-          callback opinionIndex, positiveWords, negativeWords
+  allText.push result.title
+  if result.story_text
+    allText.push result.story_text
+  getHackerNewsComments result.objectID, (allComments) ->
+    allText = allText.concat allComments if allComments.length > 0
+    callback allText
 
 
 wss.on 'connection', (ws) ->
@@ -144,29 +124,32 @@ handleMSG = (query, callback) ->
     callback cache[query]
     return
   getHackerNewsPosts query, (results) ->
-    article = []
-    sent = []
-    count = 0
-    i=0
-    for result in results
-      parseResult result, (text) ->
-        count++ if text.length > 0
-        sent = sent.concat text
-        if ++i is results.length
-          sentimentalize sent, (opinionIndex, posWords, negWords) ->
-            if isNaN opinionIndex
-              callback {opinion:"Error analyzing user sentiment..."}
-              return
-            # Normalize the results
-            opinionIndex = Math.ceil opinionIndex / count
-            console.log "Opinion: " + opinionIndex
-            msg =
-              opinion: opinionIndex
-            cache[query] = msg
-            callback msg
-          # console.log "Positive Words: " + posWords
-          # console.log "Negative Words: " + negWords
+    toParse = []
+    console.dir results
+    for res in results
+      toParse.push (callback)->
+         parseResult res, (text) ->
+          callback null, text
+    async.parallel toParse, (err, results) ->
+      text = ''
+      count = 0
+      for res in results
+        if res.length > 0
+          count++
+          text = text.concat res
+      console.log 'text: '+ text.length
+      sentiment text, (err, res)->
+        # Normalize the results
+        opinionIndex = Math.ceil res.score / count
+        positiveWords = res.positive
+        negativeWords = res.negative
 
+        console.log "Opinion: " + opinionIndex
+        # console.log "Positive Words: " + positiveWords
+        # console.log "Negative Words: " + negativeWords
+        msg = if isNaN opinionIndex then opinion:"Error analyzing user sentiment..." else opinion: opinionIndex
+        cache[query] = msg
+        callback msg
 
 
 # Routes
