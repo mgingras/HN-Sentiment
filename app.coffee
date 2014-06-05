@@ -106,9 +106,8 @@ parseResult = (result, callback) ->
   if result.story_text
     allText.push result.story_text
   getHackerNewsComments result.objectID, (allComments) ->
-    console.log 'comments'
-    console.log allComments
     allText = allText.concat allComments if allComments.length > 0
+    callback allText
 
 
 wss.on 'connection', (ws) ->
