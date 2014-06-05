@@ -15,6 +15,7 @@ WebSocketServer = require('ws').Server
 grunt = require 'grunt'
 compressor = require 'node-minify'
 async = require 'async'
+_ = require 'underscore'
 
 require 'newrelic'
 
@@ -105,8 +106,9 @@ parseResult = (result, callback) ->
   if result.story_text
     allText.push result.story_text
   getHackerNewsComments result.objectID, (allComments) ->
+    console.log 'comments'
+    console.log allComments
     allText = allText.concat allComments if allComments.length > 0
-    callback allText
 
 
 wss.on 'connection', (ws) ->
@@ -124,23 +126,25 @@ handleMSG = (query, callback) ->
     callback cache[query]
     return
   getHackerNewsPosts query, (results) ->
-    toParse = []
-    console.dir results
-    for res in results
-      toParse.push (callback)->
-         parseResult res, (text) ->
-          callback null, text
-    async.parallel toParse, (err, results) ->
-      text = ''
-      count = 0
-      for res in results
-        if res.length > 0
-          count++
-          text = text.concat res
-      console.log 'text: '+ text.length
-      sentiment text, (err, res)->
-        # Normalize the results
-        opinionIndex = Math.ceil res.score / count
+    async.map results, (result, callback) ->
+      parseResult result, (text)->
+        callback null, text
+    ,(err, results)->
+      async.map results, (result, callback) ->
+        sentiment _.flatten(result).join(' '), (err, res)->
+          callback err if err
+          callback null, res
+      ,(err, results)->
+        score = 0
+        count = results.length
+        console.dir 'count: ' + count
+        # Hackey workaround for garbage from sentiment... :\
+        for res in results
+          if isNaN res.score
+            res.score = res.score.replace(/function.*/, '')
+          score += parseInt res.score
+        console.log score
+        opinionIndex = Math.ceil score / count
         positiveWords = res.positive
         negativeWords = res.negative
 
