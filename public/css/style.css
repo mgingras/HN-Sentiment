@@ -1,17 +1,16 @@
+html, body {
+  width: 100%;
+  height: 100%;
+}
 body {
-  padding: 50px;
   font: 14px, sans-serif;
   font-family: Verdana;
+  background-color: white;
+  padding: 50px 0px;
 }
 
 a {
   color: #00B7FF;
-}
-body {
-  padding-top: 40px;
-  padding-bottom: 40px;
-  background-color: white;
-  height:100%;
 }
 .hide {
   display:none;
@@ -112,10 +111,6 @@ body {
 html {
   position: relative;
   min-height: 100%;
-}
-body {
-  /* Margin bottom by footer height */
-  margin-bottom: 60px;
 }
 #footer {
   text-align:center;
